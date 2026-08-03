@@ -9,5 +9,5 @@ async function run() {
   } catch (error) { console.error(new Date().toISOString(), '同步请求失败', error); }
 }
 console.log(`同步进程已启动，每 ${interval / 60_000} 分钟执行`);
-await run();
-setInterval(run, interval);
+void run();
+setInterval(() => { void run(); }, interval);
