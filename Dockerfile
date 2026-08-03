@@ -1,10 +1,12 @@
 ARG NODE_BASE_IMAGE=node:22-bookworm
 FROM ${NODE_BASE_IMAGE} AS deps
 WORKDIR /inventory-app
+ENV NODE_ENV=development
 COPY package*.json ./
 RUN npm ci
 FROM ${NODE_BASE_IMAGE} AS builder
 WORKDIR /inventory-app
+ENV NODE_ENV=development
 COPY --from=deps /inventory-app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate && npm run build
