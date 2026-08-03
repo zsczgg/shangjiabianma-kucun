@@ -13,5 +13,8 @@ export async function ensureDefaults() {
   await prisma.appSetting.upsert({
     where: { key: 'negativeStockPolicy' }, update: {}, create: { key: 'negativeStockPolicy', value: 'STRICT' },
   });
+  await prisma.appSetting.upsert({
+    where: { key: 'defaultLowStockThreshold' }, update: {}, create: { key: 'defaultLowStockThreshold', value: '5' },
+  });
   return warehouse;
 }

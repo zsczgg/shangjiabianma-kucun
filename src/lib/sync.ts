@@ -1,4 +1,5 @@
 import { prisma, ensureDefaults } from './db';
+import { getCatalogApiKey } from './catalog-config';
 
 type ApiSku = {
   skuId: string; internalCode: string; spec: string; status: string; createdAt?: string;
@@ -9,7 +10,7 @@ type ApiSku = {
 
 export async function syncCatalog(trigger: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
   const base = process.env.CATALOG_API_BASE_URL?.replace(/\/$/, '');
-  const key = process.env.CATALOG_API_KEY;
+  const key = await getCatalogApiKey();
   const run = await prisma.syncRun.create({ data: { trigger } });
   if (!base || !key) {
     const message = '尚未配置 CATALOG_API_BASE_URL 或 CATALOG_API_KEY';
@@ -17,7 +18,9 @@ export async function syncCatalog(trigger: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
     throw new Error(message);
   }
   try {
-    await ensureDefaults();
+    const warehouse = await ensureDefaults();
+    const thresholdSetting = await prisma.appSetting.findUnique({ where: { key: 'defaultLowStockThreshold' } });
+    const defaultThreshold = Number(thresholdSetting?.value || 5);
     let page = 1, totalPages = 1, fetched = 0, created = 0, updated = 0;
     do {
       const response = await fetch(`${base}/skus?page=${page}&pageSize=100&status=ALL`, { headers: { Authorization: `Bearer ${key}` }, cache: 'no-store' });
@@ -29,7 +32,7 @@ export async function syncCatalog(trigger: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
         const existing = await prisma.catalogSku.findUnique({ where: { internalCode: item.internalCode }, select: { id: true } });
         const data = { upstreamSkuId: item.skuId, productName: item.product.name, brand: item.product.brand || null, category: item.product.category || null, spec: item.spec, imageUrl: item.product.imageUrl || null, productStatus: item.product.status, skuStatus: item.status, manufacturerBarcode: item.codes?.manufacturerBarcode || null, warehouseCode: item.codes?.warehouseCode || null, otherCodesJson: JSON.stringify(item.codes?.otherCodes || []), platformMappingsJson: JSON.stringify(item.platformMappings || []), upstreamUpdatedAt: item.product.updatedAt ? new Date(item.product.updatedAt) : null, lastSyncedAt: new Date() };
         const sku = await prisma.catalogSku.upsert({ where: { internalCode: item.internalCode }, update: data, create: { internalCode: item.internalCode, ...data } });
-        if (!existing) { created++; const warehouse = await ensureDefaults(); await prisma.inventoryBalance.create({ data: { warehouseId: warehouse.id, skuId: sku.id } }); } else updated++;
+        if (!existing) { created++; await prisma.inventoryBalance.create({ data: { warehouseId: warehouse.id, skuId: sku.id, lowStockThreshold: defaultThreshold, usesDefaultThreshold: true } }); } else updated++;
       }
       fetched += body.data.length; page++;
     } while (page <= totalPages);

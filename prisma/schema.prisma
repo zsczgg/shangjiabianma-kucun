@@ -51,6 +51,7 @@ model InventoryBalance {
   skuId String
   quantity Int @default(0)
   lowStockThreshold Int @default(5)
+  usesDefaultThreshold Boolean @default(true)
   updatedAt DateTime @updatedAt
   warehouse Warehouse @relation(fields:[warehouseId], references:[id], onDelete:Cascade)
   sku CatalogSku @relation(fields:[skuId], references:[id], onDelete:Restrict)
