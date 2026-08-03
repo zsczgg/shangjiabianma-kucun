@@ -6,7 +6,7 @@ COPY package*.json ./
 RUN npm ci
 FROM ${NODE_BASE_IMAGE} AS builder
 WORKDIR /inventory-app
-ENV NODE_ENV=development
+ENV NODE_ENV=production
 COPY --from=deps /inventory-app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate && npm run build
