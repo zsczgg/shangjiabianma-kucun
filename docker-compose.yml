@@ -1,0 +1,26 @@
+name: shangjiabianma-kucun
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "3220:3220"
+    volumes:
+      - ./data:/app/data
+  sync-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - app
+  backup:
+    image: alpine:3.20
+    restart: unless-stopped
+    volumes:
+      - ./data:/data:ro
+      - ./backups:/backups
+    command: sh -c 'while true; do cp /data/inventory.db /backups/inventory-$$(date +%Y%m%d-%H%M%S).db 2>/dev/null || true; find /backups -type f -mtime +30 -delete; sleep 21600; done'
