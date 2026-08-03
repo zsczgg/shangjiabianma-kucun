@@ -12,7 +12,9 @@ COPY . .
 RUN npx prisma generate && npm run build
 FROM ${NODE_BASE_IMAGE} AS runner
 WORKDIR /inventory-app
-ENV NODE_ENV=production
+ENV NODE_ENV=production \
+    PORT=3220 \
+    HOSTNAME=0.0.0.0
 COPY --from=builder /inventory-app/public ./public
 COPY --from=builder /inventory-app/.next/standalone ./
 COPY --from=builder /inventory-app/.next/static ./.next/static
