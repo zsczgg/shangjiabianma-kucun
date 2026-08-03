@@ -19,4 +19,5 @@ COPY --from=builder /inventory-app/.next/static ./.next/static
 COPY --from=builder /inventory-app/prisma ./prisma
 COPY --from=builder /inventory-app/node_modules ./node_modules
 EXPOSE 3220
+ENTRYPOINT []
 CMD ["sh","-c","npx prisma db push && node server.js"]
