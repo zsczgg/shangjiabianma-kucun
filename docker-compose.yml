@@ -2,13 +2,16 @@ name: shangjiabianma-kucun
 
 services:
   app:
-    build: .
+    build:
+      context: .
+      args:
+        NODE_BASE_IMAGE: ${NODE_BASE_IMAGE:-node:22-bookworm}
     restart: unless-stopped
     env_file: .env
     ports:
       - "3220:3220"
     volumes:
-      - ./data:/app/data
+      - ./data:/inventory-app/data
   sync-worker:
     build:
       context: .
