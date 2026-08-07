@@ -14,7 +14,8 @@ FROM ${NODE_BASE_IMAGE} AS runner
 WORKDIR /inventory-app
 ENV NODE_ENV=production \
     PORT=3220 \
-    HOSTNAME=0.0.0.0
+    HOSTNAME=0.0.0.0 \
+    TZ=Asia/Shanghai
 COPY --from=builder /inventory-app/public ./public
 COPY --from=builder /inventory-app/.next/standalone ./
 COPY --from=builder /inventory-app/.next/static ./.next/static

@@ -2,8 +2,9 @@
 
 import { KeyboardEvent, useCallback, useRef, useState } from 'react';
 import { ScannerInput, ScannerInputHandle } from '@/components/scanner-input';
+import { ProductThumbnail } from '@/components/product-thumbnail';
 
-type Sku = { internalCode: string; productName: string; spec: string; balances: { quantity: number }[] };
+type Sku = { internalCode: string; productName: string; spec: string; imageUrl?: string | null; balances: { quantity: number }[] };
 
 export function StockForm() {
   const [sku, setSku] = useState<Sku | null>(null);
@@ -52,7 +53,7 @@ export function StockForm() {
     <ScannerInput ref={scannerRef} onScan={lookup} onInvalidInput={showError} busy={busy} placeholder="扫描或输入任意商品编码"/>
     {message && <div className={success ? 'notice success' : 'notice'}>{message}</div>}
     {sku && <section className="scan-result">
-      <div><span className="eyebrow">MATCHED SKU</span><h2>{sku.productName}</h2><p>{sku.spec} · <span className="code">{sku.internalCode}</span></p></div>
+      <div className="scan-product"><ProductThumbnail src={sku.imageUrl} name={sku.productName} size="large"/><div><span className="eyebrow">MATCHED SKU</span><h2>{sku.productName}</h2><p>{sku.spec} · <span className="code">{sku.internalCode}</span></p></div></div>
       <strong className={(sku.balances[0]?.quantity || 0) < 0 ? 'negative' : ''}>{sku.balances[0]?.quantity || 0}<small>当前库存</small></strong>
       <div className="stock-controls">
         <div className="segmented"><button type="button" className={type === 'IN' ? 'active' : ''} onClick={() => switchType('IN')}>入库</button><button type="button" className={type === 'OUT' ? 'active out' : ''} onClick={() => switchType('OUT')}>出库</button></div>

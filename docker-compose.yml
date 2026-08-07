@@ -8,6 +8,8 @@ services:
         NODE_BASE_IMAGE: ${NODE_BASE_IMAGE:-node:22-bookworm}
     restart: unless-stopped
     env_file: .env
+    environment:
+      TZ: Asia/Shanghai
     ports:
       - "3220:3220"
     volumes:
@@ -18,11 +20,15 @@ services:
       dockerfile: Dockerfile.worker
     restart: unless-stopped
     env_file: .env
+    environment:
+      TZ: Asia/Shanghai
     depends_on:
       - app
   backup:
     image: alpine:3.20
     restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
     volumes:
       - ./data:/data:ro
       - ./backups:/backups

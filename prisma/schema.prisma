@@ -27,6 +27,7 @@ model CatalogSku {
   category String?
   spec String
   imageUrl String?
+  imageSource String?
   productStatus String @default("ACTIVE")
   skuStatus String @default("ACTIVE")
   manufacturerBarcode String?

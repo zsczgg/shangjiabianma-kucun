@@ -3,7 +3,7 @@ import { getCatalogApiKey } from './catalog-config';
 
 type ApiSku = {
   skuId: string; internalCode: string; spec: string; status: string; createdAt?: string;
-  product: { name: string; brand?: string | null; category?: string | null; imageUrl?: string | null; status: string; updatedAt?: string };
+  product: { name: string; brand?: string | null; category?: string | null; imageUrl?: string | null; imageSource?: 'UPLOAD' | 'URL' | null; status: string; updatedAt?: string };
   codes?: { manufacturerBarcode?: string | null; warehouseCode?: string | null; otherCodes?: unknown[] };
   platformMappings?: unknown[];
 };
@@ -30,7 +30,7 @@ export async function syncCatalog(trigger: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
       totalPages = body.meta?.totalPages ?? 1;
       for (const item of body.data) {
         const existing = await prisma.catalogSku.findUnique({ where: { internalCode: item.internalCode }, select: { id: true } });
-        const data = { upstreamSkuId: item.skuId, productName: item.product.name, brand: item.product.brand || null, category: item.product.category || null, spec: item.spec, imageUrl: item.product.imageUrl || null, productStatus: item.product.status, skuStatus: item.status, manufacturerBarcode: item.codes?.manufacturerBarcode || null, warehouseCode: item.codes?.warehouseCode || null, otherCodesJson: JSON.stringify(item.codes?.otherCodes || []), platformMappingsJson: JSON.stringify(item.platformMappings || []), upstreamUpdatedAt: item.product.updatedAt ? new Date(item.product.updatedAt) : null, lastSyncedAt: new Date() };
+        const data = { upstreamSkuId: item.skuId, productName: item.product.name, brand: item.product.brand || null, category: item.product.category || null, spec: item.spec, imageUrl: item.product.imageUrl || null, imageSource: item.product.imageSource || null, productStatus: item.product.status, skuStatus: item.status, manufacturerBarcode: item.codes?.manufacturerBarcode || null, warehouseCode: item.codes?.warehouseCode || null, otherCodesJson: JSON.stringify(item.codes?.otherCodes || []), platformMappingsJson: JSON.stringify(item.platformMappings || []), upstreamUpdatedAt: item.product.updatedAt ? new Date(item.product.updatedAt) : null, lastSyncedAt: new Date() };
         const sku = await prisma.catalogSku.upsert({ where: { internalCode: item.internalCode }, update: data, create: { internalCode: item.internalCode, ...data } });
         if (!existing) { created++; await prisma.inventoryBalance.create({ data: { warehouseId: warehouse.id, skuId: sku.id, lowStockThreshold: defaultThreshold, usesDefaultThreshold: true } }); } else updated++;
       }
